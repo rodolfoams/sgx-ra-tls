@@ -2,35 +2,7 @@
 
 set -x
 
-function usage() {
-    echo "./build.sh sgxsdk|graphene|scone|sgxlkl"
-}
-
-# You need the SGX SDK and PSW installed.
-
-if [[ $# -gt 1 || $# -eq 0 ]]; then
-    echo "wrong number of arguments"
-    usage
-    exit 1
-fi
-
-[[ $# -eq 1 ]] && VARIANT=$1
-
-if [[ ! ( $VARIANT == "scone" ||
-                $VARIANT == "graphene" ||
-                $VARIANT == "sgxsdk" ||
-                $VARIANT == "sgxlkl" ) ]] ; then
-    echo "unknown variant; must be one of sgxsdk, graphene, scone or sgxlkl."
-    usage
-    exit 1
-fi
-
-# Choose compiler to build deps.
-if [[ ( $VARIANT == "graphene" || $VARIANT == "sgxsdk" || $VARIANT == "sgxlkl" ) ]] ; then
-    export CC=gcc
-elif [[ $VARIANT == "scone" ]] ; then
-    export CC=/usr/local/bin/scone-gcc
-fi
+export CC=gcc
 
 mkdir -p deps
 make -j`nproc` deps
@@ -56,23 +28,17 @@ fi
 
 popd # deps
 
-if [[ $VARIANT == "graphene" ]] ; then
-    make deps/graphene/Runtime/pal-Linux-SGX
-fi
-
 # Copy client certificates required to talk to Intel's Attestation
 # Service
 # cp ../../certs/ias-client*.pem .
 
-if [ $VARIANT == "sgxsdk" ] ; then
-    echo "Building wolfSSL SGX library ..."
-    # The "make ... clean"s make sure there is no residual state from
-    # previous builds lying around that might otherwise confuse the
-    # build system.
-    make -f ratls-wolfssl.mk clean || exit 1
-    make -f ratls-wolfssl.mk || exit 1
-    make -f ratls-wolfssl.mk clean || exit 1
-fi
+echo "Building wolfSSL SGX library ..."
+# The "make ... clean"s make sure there is no residual state from
+# previous builds lying around that might otherwise confuse the
+# build system.
+make -f ratls-wolfssl.mk clean || exit 1
+make -f ratls-wolfssl.mk || exit 1
+make -f ratls-wolfssl.mk clean || exit 1
 
 pushd deps
 if [[ ! -d wolfssl-examples ]] ; then
@@ -93,20 +59,4 @@ echo "Building non-SGX-SDK sample clients ..."
 make clients || exit 1
 make clean || exit 1
 
-if [ $VARIANT == "scone" ] ; then
-    make scone-server || exit 1
-fi
-
-if [ $VARIANT == "sgxlkl" ] ; then
-    make messages.pb-c.c
-    make -C sgxlkl -j2 || exit 1
-fi
-
-if [ $VARIANT == "sgxsdk" ] ; then
-    make sgxsdk-server || exit 1
-fi
-
-if [ $VARIANT == "graphene" ] ; then
-    make graphene-server || exit 1
-    make wolfssl-client-mutual || exit 1
-fi
+make sgxsdk-server || exit 1

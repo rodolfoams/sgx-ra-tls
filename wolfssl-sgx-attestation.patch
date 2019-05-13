@@ -1,3 +1,39 @@
+diff --git a/src/wolfio.c b/src/wolfio.c
+index f564297c8..ffc6f93ff 100644
+--- a/src/wolfio.c
++++ b/src/wolfio.c
+@@ -138,7 +138,17 @@ int EmbedReceive(WOLFSSL *ssl, char *buf, int sz, void *ctx)
+         int err = LastError();
+         WOLFSSL_MSG("Embed Receive error");
+
+-        if (err == SOCKET_EWOULDBLOCK || err == SOCKET_EAGAIN) {
++        if (err == SOCKET_EAGAIN) {
++            if (!wolfSSL_dtls(ssl) || wolfSSL_get_using_nonblock(ssl)) {
++                WOLFSSL_MSG("\tWould block");
++                return WOLFSSL_CBIO_ERR_WANT_READ;
++            }
++            else {
++                WOLFSSL_MSG("\tSocket timeout");
++                return WOLFSSL_CBIO_ERR_TIMEOUT;
++            }
++        }
++       else if (err == SOCKET_EWOULDBLOCK) {
+             if (!wolfSSL_dtls(ssl) || wolfSSL_get_using_nonblock(ssl)) {
+                 WOLFSSL_MSG("\tWould block");
+                 return WOLFSSL_CBIO_ERR_WANT_READ;
+@@ -190,7 +200,11 @@ int EmbedSend(WOLFSSL* ssl, char *buf, int sz, void *ctx)
+         int err = LastError();
+         WOLFSSL_MSG("Embed Send error");
+
+-        if (err == SOCKET_EWOULDBLOCK || err == SOCKET_EAGAIN) {
++        if (err == SOCKET_EWOULDBLOCK) {
++            WOLFSSL_MSG("\tWould Block");
++            return WOLFSSL_CBIO_ERR_WANT_WRITE;
++        }
++       else if (err == SOCKET_EAGAIN) {
+             WOLFSSL_MSG("\tWould Block");
+             return WOLFSSL_CBIO_ERR_WANT_WRITE;
+         }
 diff --git a/wolfcrypt/src/asn.c b/wolfcrypt/src/asn.c
 index e234253..7c4bbd8 100644
 --- a/wolfcrypt/src/asn.c
