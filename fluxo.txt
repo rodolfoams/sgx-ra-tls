@@ -18,7 +18,7 @@ docker build -t ratls .
 docker run -it --rm --device=/dev/isgx --device=/dev/mei0 ratls /bin/bash
 
 # Inside the container
-cd /project/deps/wolfss-examples/SGX_Linux
+cd /project/deps/wolfssl-examples/SGX_Linux
 ./App -s &
 
 cd ../../..
