@@ -1,0 +1,26 @@
+# Steps needed to run sample SGX-RA-TLS
+
+## Configuration
+
+1. Add your private key used to communicate with IAS to the root directory (it must be named ias-client-key.pem).
+2. Add your certificate used to communicate with IAS to the root directory (it must be named ias-client-cert.pem).
+3. Modify the ra_tls_options.c file to add your SPID used to communicate with IAS.
+
+## Building Image
+
+```bash
+docker build -t ratls .
+```
+
+## Running Sample Code
+
+```bash
+docker run -it --rm --device=/dev/isgx --device=/dev/mei0 ratls /bin/bash
+
+# Inside the container
+cd /project/deps/wolfss-examples/SGX_Linux
+./App -s &
+
+cd ../../..
+./mbedtls-client
+```
