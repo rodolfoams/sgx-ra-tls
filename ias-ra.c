@@ -216,10 +216,10 @@ void obtain_attestation_verification_report
 
     curl = curl_easy_init();
     if(curl) {
-        // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
         curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
         char url[512];
-        ret = snprintf(url, sizeof(url), "https://%s/attestation/sgx/v2/report",
+        ret = snprintf(url, sizeof(url), "https://%s/attestation/sgx/v3/report",
                            opts->ias_server);
         assert(ret < (int) sizeof(url));
         curl_easy_setopt(curl, CURLOPT_URL, url);

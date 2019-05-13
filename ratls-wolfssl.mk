@@ -2,36 +2,17 @@
 
 ######## Intel(R) SGX SDK Settings ########
 SGX_SDK ?= /opt/intel/sgxsdk
-SGX_MODE ?= HW
-SGX_ARCH ?= x64
 PROJECT_ROOT ?= $(shell readlink -f .)
 
 WOLFSSL_ROOT := $(shell readlink -f deps/wolfssl)
 
-SGX_COMMON_CFLAGS := -m64
+SGX_COMMON_CFLAGS := -m64 -O2
 SGX_LIBRARY_PATH := $(SGX_SDK)/lib64
 SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x64/sgx_sign
 SGX_EDGER8R := $(SGX_SDK)/bin/x64/sgx_edger8r
 
-ifeq ($(SGX_DEBUG), 1)
-ifeq ($(SGX_PRERELEASE), 1)
-$(error Cannot set SGX_DEBUG and SGX_PRERELEASE at the same time!!)
-endif
-endif
-
-ifeq ($(SGX_DEBUG), 1)
-    SGX_COMMON_CFLAGS += -O0 -g
-else
-    SGX_COMMON_CFLAGS += -O2
-endif
-
-ifneq ($(SGX_MODE), HW)
-	Trts_Library_Name := sgx_trts_sim
-	Service_Library_Name := sgx_tservice_sim
-else
-	Trts_Library_Name := sgx_trts
-	Service_Library_Name := sgx_tservice
-endif
+Trts_Library_Name := sgx_trts
+Service_Library_Name := sgx_tservice
 
 Library_Name := sgx_ra_tls_wolfssl
 
@@ -47,9 +28,9 @@ Wolfssl_C_Files := $(PROJECT_ROOT)/wolfssl-ra-attester.c \
 
 Wolfssl_Include_Paths := -I$(WOLFSSL_ROOT)/ \
 						 -I$(WOLFSSL_ROOT)/wolfcrypt/ \
-						 -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport
+						 -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/libcxx
 
-Compiler_Warnings := -Wall -Wextra -Wwrite-strings -Wlogical-op -Wshadow -Werror
+Compiler_Warnings := -Wall -Wextra -Wwrite-strings -Wshadow -Werror
 Flags_Just_For_C := -Wno-implicit-function-declaration -std=c11
 Common_C_Cpp_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Wolfssl_Include_Paths) -fno-builtin-printf -I.
 Wolfssl_C_Flags := $(Compiler_Warnings) $(Flags_Just_For_C) $(Common_C_Cpp_Flags) $(Wolfssl_C_Extra_Flags)
